@@ -1,4 +1,5 @@
 use rayon::prelude::*;
+use rayon::slice::ParallelSlice;
 
 const MOD: usize = 1_000_000_007;
 const BASE: usize = 256;
@@ -18,17 +19,17 @@ pub fn rolling_hash_parallel(pattern: &[u8], text: &[u8]) -> Vec<usize> {
         base_pow = (base_pow * BASE) & (MOD - 1);
     }
 
-    // Create an iterator over the indices of the text
-    let text_indices = (0..text.len() - pattern.len() + 1).into_par_iter();
+    // Create an iterator over the chunks of the text
+    let text_chunks = text.par_chunks(pattern.len());
 
-    // Filter and map the text indices to matching indices
-    let matching_indices = text_indices.filter_map(|i| {
+    // Filter and map the text chunks to matching indices
+    let matching_indices = text_chunks.enumerate().filter_map(|(i, chunk)| {
         // Calculate initial hash of text
-        let text_hash: usize = text.iter().skip(i).take(pattern.len()).fold(0, |acc: usize, &x| (acc * BASE + x as usize) & (MOD - 1));
+        let text_hash: usize = chunk.iter().fold(0, |acc: usize, &x| (acc * BASE + x as usize) & (MOD - 1));
 
         // Check for match in initial substring
-        if pattern_hash == text_hash && pattern == &text[i..i + pattern.len()] {
-            Some(i)
+        if pattern_hash == text_hash && pattern == chunk {
+            Some(i * pattern.len())
         } else {
             None
         }

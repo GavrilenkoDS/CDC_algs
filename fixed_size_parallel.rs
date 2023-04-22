@@ -1,48 +1,36 @@
 use rayon::prelude::*;
+use rayon::slice::ParallelSlice;
+use std::sync::Mutex;
 
 pub fn fixed_size_parallel(pattern: &[u8], text: &[u8], chunk_size: usize) -> Vec<usize> {
     let n: usize = text.len();
     let m: usize = pattern.len();
+    let results: Mutex<Vec<usize>> = Mutex::new(Vec::new());
 
-    let mut results: Vec<Vec<usize>> = Vec::new();
-
-    if m > n || m == 0 {
+    if m == 0 || m > n {
         return Vec::new();
     }
 
-    if m > chunk_size {
-        return Vec::new();
-    }
+    let chunks = text.par_chunks(chunk_size).enumerate();
 
-    let mut start: usize = 0;
-    let mut end: usize = chunk_size.min(n);
-
-    while start < n {
-        let chunk: &[u8] = &text[start..end];
-
-        let chunk_results = chunk.par_iter().enumerate().filter_map(|(i, &byte)| {
-            if byte == pattern[0] {
-                if chunk.len() - i >= m {
-                    let window: &[u8] = &chunk[i..i + m];
-                    if window == pattern {
-                        let offset: usize = start + i;
-                        Some(offset)
+    chunks
+        .flat_map(|(i, chunk)| {
+            chunk
+                .windows(m)
+                .enumerate()
+                .filter_map(move |(j, slice)| {
+                    let pos = i * chunk_size + j;
+                    if slice == pattern {
+                        Some(pos)
                     } else {
                         None
                     }
-                } else {
-                    None
-                }
-            } else {
-                None
-            }
-        }).collect::<Vec<usize>>();
+                })
+                .par_bridge()
+        })
+        .for_each(|pos| {
+            results.lock().unwrap().push(pos);
+        });
 
-        results.push(chunk_results);
-
-        start += chunk_size;
-        end = (end + chunk_size).min(n);
-    }
-
-    results.into_par_iter().flatten().collect()
+    results.into_inner().unwrap()
 }

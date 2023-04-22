@@ -18,7 +18,7 @@ use std::time::Instant;
 
 fn main() {
     
-    let mut file: File = File::open("C:\\Users\\Dmitrii\\Desktop\\study_rust\\test.txt").expect("Failed to open file");
+    let mut file: File = File::open("C:\\Users\\Dmitrii\\Desktop\\study_rust\\bigtest.txt").expect("Failed to open file");
     let mut content: Vec<u8> = Vec::new();
     file.read_to_end(&mut content).expect("Failed to read file");
 
@@ -52,22 +52,22 @@ fn main() {
     let fixed_size_parallel_duration = start.elapsed();
 
     println!();
-    println!("Rabin-Karp result: {:?}", rabin_karp_result);
+    //println!("Rabin-Karp result: {:?}", rabin_karp_result);
     println!("Rabin-Karp completed in {} seconds", (rabin_karp_duration).as_secs_f32());
     println!();
-    println!("Rabin-Karp parallel result: {:?}", rabin_karp_parallel_result);
+    //println!("Rabin-Karp parallel result: {:?}", rabin_karp_parallel_result);
     println!("Rabin-Karp parallel completed in {} seconds", (rabin_karp_parallel_duration).as_secs_f32());
     println!();
-    println!("Rolling hash result: {:?}", rolling_hash_result);
+    //println!("Rolling hash result: {:?}", rolling_hash_result);
     println!("Rolling hash completed in {} seconds", (rolling_hash_duration).as_secs_f32());
     println!();
-    println!("Rolling hash parallel result: {:?}", rolling_hash_parallel_result);
-    println!("Rolling hash completed in {} seconds", (rolling_hash_parallel_duration).as_secs_f32());
+    //println!("Rolling hash parallel result: {:?}", rolling_hash_parallel_result);
+    println!("Rolling hash parallel completed in {} seconds", (rolling_hash_parallel_duration).as_secs_f32());
     println!();
-    println!("Fixed-size result: {:?}", fixed_size_result);
+    //println!("Fixed-size result: {:?}", fixed_size_result);
     println!("Fixed-size completed in {} seconds", (fixed_size_duration).as_secs_f32());
     println!();
-    println!("Fixed-size parallel result: {:?}", fixed_size_parallel_result);
+    //println!("Fixed-size parallel result: {:?}", fixed_size_parallel_result);
     println!("Fixed-size parallel completed in {} seconds", (fixed_size_parallel_duration).as_secs_f32());
     println!();
 
