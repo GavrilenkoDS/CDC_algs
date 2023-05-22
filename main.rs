@@ -4,9 +4,11 @@ mod rabin_karp;
 mod rabin_karp_parallel;
 mod fixed_size;
 mod fixed_size_parallel;
+mod rolling_hash_parallel_vectorisation;
 
 use rolling_hash::rolling_hash;
 use rolling_hash_parallel::rolling_hash_parallel;
+use rolling_hash_parallel_vectorisation::rolling_hash_parallel_vectorisation;
 use rabin_karp::rabin_karp;
 use rabin_karp_parallel::rabin_karp_parallel;
 use fixed_size::fixed_size;
@@ -18,15 +20,15 @@ use std::time::Instant;
 
 fn main() {
     
-    let mut file: File = File::open("C:\\Users\\Dmitrii\\Desktop\\study_rust\\bigtest.txt").expect("Failed to open file");
+    let mut file: File = File::open("C:\\Users\\Dmitrii\\Desktop\\myy\\test.txt").expect("Failed to open file");
     let mut content: Vec<u8> = Vec::new();
     file.read_to_end(&mut content).expect("Failed to read file");
-
-    let pattern: &[u8] = b"harmony ";
-
     
+    let pattern: &[u8] = b"qweqwe";
 
-    // Finding result
+    println!("text.len(): {:?}", &content.len());
+
+    //Finding result
     let start = Instant::now();
     let rabin_karp_result: Vec<usize> = rabin_karp(pattern, &content);
     let rabin_karp_duration = start.elapsed();
@@ -44,6 +46,10 @@ fn main() {
     let rolling_hash_parallel_duration = start.elapsed();
 
     let start = Instant::now();
+    let rolling_hash_parallel_vectorisation_result: Vec<usize> = unsafe {rolling_hash_parallel_vectorisation(pattern, &content)};
+    let rolling_hash_parallel_vectorisation_duration = start.elapsed();
+
+    let start = Instant::now();
     let fixed_size_result: Vec<usize> = fixed_size(pattern, &content, 1024); // use chunk size of 1024 bytes
     let fixed_size_duration = start.elapsed();
 
@@ -53,21 +59,30 @@ fn main() {
 
     println!();
     //println!("Rabin-Karp result: {:?}", rabin_karp_result);
+    println!("Rabin-Karp result is {} matches", (rabin_karp_result.len()));
     println!("Rabin-Karp completed in {} seconds", (rabin_karp_duration).as_secs_f32());
     println!();
-    //println!("Rabin-Karp parallel result: {:?}", rabin_karp_parallel_result);
+    println!("Rabin-Karp parallel result: {}", rabin_karp_parallel_result.len());
     println!("Rabin-Karp parallel completed in {} seconds", (rabin_karp_parallel_duration).as_secs_f32());
     println!();
     //println!("Rolling hash result: {:?}", rolling_hash_result);
+    println!("Rolling hash result is {} matches", (rolling_hash_result.len()));
     println!("Rolling hash completed in {} seconds", (rolling_hash_duration).as_secs_f32());
+    
     println!();
     //println!("Rolling hash parallel result: {:?}", rolling_hash_parallel_result);
+    println!("Rolling hash parallel is {} matches", (rolling_hash_parallel_result.len()));
     println!("Rolling hash parallel completed in {} seconds", (rolling_hash_parallel_duration).as_secs_f32());
+   
     println!();
-    //println!("Fixed-size result: {:?}", fixed_size_result);
+    //println!("Rolling hash parallel vectorisation result: {:?}", rolling_hash_parallel_vectorisation_result);
+    println!("Rolling hash parallel vectorisation completed in {} seconds", (rolling_hash_parallel_vectorisation_duration).as_secs_f32());
+    println!("Rolling hash parallel vectorisation is {} matches", (rolling_hash_parallel_vectorisation_result.len()));
+    println!();
+    println!("Fixed-size result is {} matches", fixed_size_result.len());
     println!("Fixed-size completed in {} seconds", (fixed_size_duration).as_secs_f32());
     println!();
-    //println!("Fixed-size parallel result: {:?}", fixed_size_parallel_result);
+    println!("Fixed-size parallel resultis {} matches", fixed_size_parallel_result.len());
     println!("Fixed-size parallel completed in {} seconds", (fixed_size_parallel_duration).as_secs_f32());
     println!();
 
