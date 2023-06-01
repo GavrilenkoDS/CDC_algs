@@ -1,7 +1,50 @@
+use std::thread;
+use num_cpus;
 const BASE: u64 = 256;
 const MOD: u64 = 1_000_000_007;
+pub fn rabin_karp_parallel_threads(pattern: &[u8], text: &[u8]) -> Vec<usize> {
+    
+    let num_threads = num_cpus::get();
+    //Length exeption
+    if pattern.len() > text.len() || pattern.len() == 0 {
+        return Vec::new();
+    }
 
-pub fn rabin_karp(pattern: &[u8], text: &[u8]) -> Vec<usize> {
+    // Split the text into chunks for each thread
+    let chunk_size = text.len() / num_threads;
+    let chunks: Vec<Vec<u8>> = (0..num_threads)
+    .map(|i| text[i * chunk_size..(i + 1) * chunk_size].to_vec())
+    .collect();
+
+    // Define a mutable vector to store the results
+    let mut result: Vec<usize> = Vec::new();
+
+    // Spawn a thread for each chunk
+    let handles: Vec<_> = chunks
+        .into_iter()
+        .map(|chunk| {
+            let pattern = pattern.to_owned();
+            let mut chunk_result = Vec::new();
+            let handle = thread::spawn(move || {
+                chunk_result = rabin_karp(&pattern, &chunk);
+                chunk_result
+            });
+            handle
+        })
+        .collect();
+
+    // Collect the results from each thread
+    for handle in handles {
+        let chunk_result: Vec<usize> = handle.join().unwrap();
+        result.extend(chunk_result);
+    }
+
+    result
+}
+
+
+
+fn rabin_karp(pattern: &[u8], text: &[u8]) -> Vec<usize> {
     let n = text.len();
     let m = pattern.len();
     let mut result: Vec<usize> = Vec::new();
