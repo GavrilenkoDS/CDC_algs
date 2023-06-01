@@ -1,44 +1,38 @@
-const MOD: usize = 1_000_000_007;
-const BASE: usize = 256;
+
 
 pub fn rolling_hash(pattern: &[u8], text: &[u8]) -> Vec<usize> {
+    let n: usize = text.len();
+    let m: usize = pattern.len();
+    let mut results: Vec<usize> = Vec::new();
 
-    //Length exeption
-    if pattern.len() > text.len() || pattern.len() == 0 {
-        return Vec::new();
+    if m == 0 || m > n {
+        return results;
     }
 
+    // Calculate hash of the pattern
+    let pattern_hash: u64 = pattern.iter().fold(0, |acc, &x| (acc << 8) + u64::from(x));
 
+    // Calculate initial hash of the first substring in the text
+    let mut text_hash: u64 = text.iter().take(m).fold(0, |acc, &x| (acc << 8) + u64::from(x));
 
-    let mut result: Vec<usize> = Vec::new();
-
-    // Calculate hash of pattern
-    let pattern_hash: usize = pattern.iter().fold(0, |acc: usize, &x| (acc * BASE + x as usize) & (MOD - 1));
-
-    // Calculate initial hash of text
-    let mut text_hash: usize = text.iter().take(pattern.len()).fold(0, |acc: usize, &x| (acc * BASE + x as usize) & (MOD - 1));
-
-    // Check for match in initial substring
-    if pattern_hash == text_hash && pattern == &text[0..pattern.len()] {
-        result.push(0);
+    // Check if the first substring matches the pattern
+    if pattern_hash == text_hash && pattern == &text[0..m] {
+        results.push(0);
     }
 
-    // Precompute powers of the base
-    let mut base_pow: usize = 1;
-    for _ in 0..pattern.len() {
-        base_pow = (base_pow * BASE) & (MOD - 1);
-    }
+    // Calculate the rolling hash for the remaining substrings
+    for i in 1..=n - m {
+        // Remove the leftmost character from the rolling hash
+        text_hash -= u64::from(text[i - 1]) << (8 * (m - 1));
 
-    // Iterate over remaining substrings of text
-    for i in 1..text.len() - pattern.len() + 1 {
-        // Update hash using sliding window technique
-        text_hash = (((text_hash * BASE) & (MOD - 1)) + text[i + pattern.len() - 1] as usize - ((text[i - 1] as usize * base_pow) & (MOD - 1))) & (MOD - 1);
+        // Shift the rolling hash left by one position and add the new character
+        text_hash = (text_hash << 8) + u64::from(text[i + m - 1]);
 
-        // Check for match
-        if pattern_hash == text_hash && pattern == &text[i..i + pattern.len()] {
-            result.push(i);
+        // Check if the rolling hash matches the pattern
+        if pattern_hash == text_hash && pattern == &text[i..i + m] {
+            results.push(i);
         }
     }
 
-    result
+    results
 }
