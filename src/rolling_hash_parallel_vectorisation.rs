@@ -7,7 +7,7 @@ use std::arch::x86_64::*;
 
 pub fn rolling_hash_parallel_vectorisation(pattern: &[u8], text: &[u8]) -> Vec<usize> {
     
-    let num_threads = 1;
+    let num_threads = num_cpus::get();
     //Length exeption
     if pattern.len() > text.len() || pattern.len() == 0 {
         return Vec::new();

@@ -1,10 +1,51 @@
 const MOD: usize = 1_000_007;
 const BASE: usize = 2;
-
+use std::thread;
+use num_cpus;
 use std::arch::x86_64::*;
 
 
 pub fn rolling_hash_vectorisation(pattern: &[u8], text: &[u8]) -> Vec<usize> {
+    
+    let num_threads = 1;
+    //Length exeption
+    if pattern.len() > text.len() || pattern.len() == 0 {
+        return Vec::new();
+    }
+
+    // Split the text into chunks for each thread
+    let chunk_size = text.len() / num_threads;
+    let chunks: Vec<Vec<u8>> = (0..num_threads)
+    .map(|i| text[i * chunk_size..(i + 1) * chunk_size].to_vec())
+    .collect();
+
+    // Define a mutable vector to store the results
+    let mut result: Vec<usize> = Vec::new();
+
+    // Spawn a thread for each chunk
+    let handles: Vec<_> = chunks
+        .into_iter()
+        .map(|chunk| {
+            let pattern = pattern.to_owned();
+            let mut chunk_result = Vec::new();
+            let handle = thread::spawn(move || {
+                chunk_result = rolling_hash_vect(&pattern, &chunk);
+                chunk_result
+            });
+            handle
+        })
+        .collect();
+
+    // Collect the results from each thread
+    for handle in handles {
+        let chunk_result: Vec<usize> = handle.join().unwrap();
+        result.extend(chunk_result);
+    }
+
+    result
+}
+
+fn rolling_hash_vect(pattern: &[u8], text: &[u8]) -> Vec<usize> {
     
     //Length exeption
     if pattern.len() > text.len() || pattern.len() == 0 {
@@ -57,9 +98,6 @@ pub fn rolling_hash_vectorisation(pattern: &[u8], text: &[u8]) -> Vec<usize> {
         if pattern_hash == text_hash && pattern == &text[i..i + pattern_len] {
             result.push(i);
         }
-        // if pattern_hash == text_hash && pattern == &text[i..i + pattern_len] {
-        //     result.push(i);
-        // }
         // if pattern_hash == text_hash && pattern != &text[i..i + pattern_len] {
         //     println!("pattern: {:?}   text: {:?} ", pattern,&text[i..i + pattern_len] )
         // }
@@ -131,8 +169,8 @@ fn update_hash_simd(hash: usize, removed: u8, added: u8, base: u32, base_pow: u3
         // Take module
         let added_hash_mod = modulo_simd(added_hash,modulus as i32);
 
-        // println!("admod  {:?}",_mm_cvtsi128_si32(added_hash_mod) as u32);
-        // println!("adusu  {:?}",_mm_cvtsi128_si32(added_hash) as u32);
+        //println!("admod  {:?}",_mm_cvtsi128_si32(added_hash_mod) as u32);
+        //println!("adusu  {:?}",_mm_cvtsi128_si32(added_hash) as u32);
 
         // println!();
         // println!("ad  {:?}",added_hash);

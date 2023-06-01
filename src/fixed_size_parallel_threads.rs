@@ -1,8 +1,7 @@
 use std::thread;
 use num_cpus;
-const MOD: usize = 1_000_000_007;
-const BASE: usize = 256;
-pub fn rolling_hash_parallel(pattern: &[u8], text: &[u8]) -> Vec<usize> {
+
+pub fn fixed_size_parallel_threads(pattern: &[u8], text: &[u8],chunk_size: usize) -> Vec<usize> {
     
     let num_threads = num_cpus::get();
     //Length exeption
@@ -26,7 +25,7 @@ pub fn rolling_hash_parallel(pattern: &[u8], text: &[u8]) -> Vec<usize> {
             let pattern = pattern.to_owned();
             let mut chunk_result = Vec::new();
             let handle = thread::spawn(move || {
-                chunk_result = fixed_size(&pattern, &chunk);
+                chunk_result = fixed_size(&pattern, &chunk,chunk_size);
                 chunk_result
             });
             handle
@@ -42,7 +41,7 @@ pub fn rolling_hash_parallel(pattern: &[u8], text: &[u8]) -> Vec<usize> {
     result
 }
 
-pub fn fixed_size(pattern: &[u8], text: &[u8], chunk_size: usize) -> Vec<usize> {
+fn fixed_size(pattern: &[u8], text: &[u8], chunk_size: usize) -> Vec<usize> {
     let n: usize = text.len();
     let m: usize = pattern.len();
 
